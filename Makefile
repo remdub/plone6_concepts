@@ -16,5 +16,4 @@ clean:
 	rm -rf .python-version .installed.cfg bin develop-eggs eggs include lib parts pyvenv.cfg
 
 ./bin/pip:
-	pyenv local 3.12
-	python -mvenv .
+	python3.12 -m venv .
