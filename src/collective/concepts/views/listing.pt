@@ -7,5 +7,9 @@
             </a>
             <p>${page/description}</p>
         </article>
+        <h2>Essai</h2>
+        <a  class="pat-inject" href="@@patinject"
+            data-pat-inject="source: #src; target:  #testtest"> injection </a>
+        <p id="testtest"></p>
     </metal:slot>
 </metal:macro>

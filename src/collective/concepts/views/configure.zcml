@@ -49,4 +49,12 @@
       layer="collective.concepts.interfaces.IBrowserLayer"
       />
 
+  <browser:page
+      name="patinject"
+      for="plone.base.interfaces.siteroot.IPloneSiteRoot"
+      template="patinject.pt"
+      permission="zope2.View"
+      layer="collective.concepts.interfaces.IBrowserLayer"
+      />
+
 </configure>
