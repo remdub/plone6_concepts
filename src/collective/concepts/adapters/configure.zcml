@@ -30,6 +30,11 @@
 
   <adapter factory=".richtitle.RichTitleAdapterForBook" />
 
+  <adapter
+      factory=".richtitle.ReverseRichTitleAdapterForDexterityContent"
+      name="reverse"
+      />
+
   <!--<adapter factory=".serializer.FieldSerializer" />-->
 
 </configure>

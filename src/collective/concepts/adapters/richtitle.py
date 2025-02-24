@@ -47,3 +47,15 @@ class RichTitleAdapterForBook(RichTitleAdapterForDexterityContent):
     def rich_title(self):
         super_title = super().get_rich_title()
         return f"{super_title} (ISBN-{self.content.isbn13})"
+
+
+@adapter(IDexterityContent)
+@implementer(IRichTitle)
+class ReverseRichTitleAdapterForDexterityContent(object):
+
+    def __init__(self, content):
+        self.content = content
+
+    @property
+    def reversed_title(self):
+        return self.content.title[::-1].swapcase()
