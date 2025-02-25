@@ -1,19 +1,18 @@
-.PHONY: help  # List phony targets
+.PHONY: help			# List phony targets
 help:
 	@cat "Makefile" | grep '^.PHONY:' | sed -e "s/^.PHONY:/- make/"
 
-.PHONY: install  # Install project
-install: ./bin/pip
-	./bin/pip install -r https://dist.plone.org/release/6.1.0/requirements.txt
-	./bin/buildout -c buildout.cfg
+.PHONY: watch			# Watch docker image
+watch: docker-image
+	docker compose up --watch
 
-.PHONY: start  # Start instance in fg mode
-start:
-	./bin/instance fg
+.PHONY: docker-image		# Build docker image
+docker-image:
+	docker build -t plone6concepts .
 
-.PHONY: clean  # Clean environment
-clean:
-	rm -rf .python-version .installed.cfg bin develop-eggs eggs include lib parts pyvenv.cfg
+.PHONY: docker-image-no-cache	# Build docker image without cache
+docker-image-no-cache:
+	docker build --no-cache -t plone6concepts .
 
 ./bin/pip:
 	python3.12 -m venv .

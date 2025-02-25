@@ -1,0 +1,25 @@
+services:
+  instance:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    image: plone6concepts
+    develop:
+      watch:
+        - action: sync+exec
+          path: ./src
+          target: /plone/src
+          exec:
+            command: /plone/bin/instance restart
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./var:/plone/var
+    environment:
+      - DOMAINS=localhost
+      - ZODB_CACHE_SIZE=30000
+      - ZEO_CLIENT_CACHE_SIZE=256MB
+      - PLONE_EXTENSION_IDS=plone.app.caching:default,plonetheme.barceloneta:default,collective.concepts:default
+      - DEFAULT_LANGUAGE=fr
+    healthcheck:
+      test: ["CMD", "nc", "-z", "-w5", "127.0.0.1", "8080"]

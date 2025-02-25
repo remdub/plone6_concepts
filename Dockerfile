@@ -1,0 +1,185 @@
+FROM ubuntu:24.04 AS base-py3
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update -qqy \
+  && apt-get full-upgrade -qqy \
+  && apt-get install --no-install-recommends -qqy  \
+        bash-completion \
+        curl \
+        htop \
+        iproute2 \
+        locales \
+        ncurses-term \
+        python3 \
+        python3-pip \
+        software-properties-common \
+        telnet \
+        tzdata \
+        vim \
+        gpg-agent \
+  && rm -rf /var/lib/apt/lists/* \
+  && ln -sf /usr/share/zoneinfo/Europe/Brussels /etc/localtime \
+  && echo "Europe/Brussels" > /etc/timezone \
+  && dpkg-reconfigure tzdata \
+  && groupadd -g 209 imio \
+  && useradd --shell /bin/bash -u 913 -g 209 -o -c "iMio base user" -m imio
+
+
+FROM base-py3 AS base-plone-builder
+
+ENV ZC_BUILDOUT=4.0 \
+  SETUPTOOLS=75.6.0 \
+  PLONE_VERSION=6.1.0
+
+LABEL plone=$PLONE_VERSION \
+    name="Plone 6.1.0" \
+    description="Plone image, based on Unified Installer" \
+    maintainer="iMio"
+
+RUN mkdir -p /plone /data /data/blobstorage /data/filestorage
+COPY buildout-base.cfg /plone
+WORKDIR /plone
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  build-essential \
+  gcc \
+  git \
+  libbz2-dev \
+  libc6-dev \
+  libffi-dev \
+  libjpeg62-dev \
+  libopenjp2-7-dev \
+  libmemcached-dev \
+  libpcre3-dev \
+  libpq-dev \
+  libreadline-dev \
+  libssl-dev \
+  libxml2-dev \
+  libxslt1-dev \
+  python3-dev \
+  wget \
+  zlib1g-dev
+
+RUN pip3 install --no-cache-dir --break-system-packages setuptools==$SETUPTOOLS zc.buildout==$ZC_BUILDOUT py-spy \
+  &&  wget -nv https://dist.plone.org/release/$PLONE_VERSION/requirements.txt \
+  && wget -nv https://dist.plone.org/release/$PLONE_VERSION/versions.cfg \
+  && chown imio:imio -R /plone \
+  && chown imio:imio -R /data \
+  && pip install --break-system-packages --ignore-installed -r requirements.txt
+
+RUN su -c "buildout -c buildout-base.cfg -t 30 -N" -s /bin/sh imio
+
+
+FROM base-py3 AS base-plone
+
+COPY --chown=imio --from=base-plone-builder /plone/requirements.txt /plone/
+COPY --chown=imio --from=base-plone-builder /plone/eggs /plone/eggs
+WORKDIR /plone
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install -y --no-install-recommends \
+libjpeg62 \
+libmemcached11 \
+libopenjp2-7 \
+libpq5 \
+libtiff6 \
+libxml2 \
+libxslt1.1 \
+lynx \
+netcat-openbsd \
+poppler-utils \
+rsync \
+wget \
+wv \
+&& apt-get clean \
+&& rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --break-system-packages --ignore-installed -r requirements.txt \
+&& mkdir -p /data /data/blobstorage /data/filestorage \
+&& chown imio:imio -R /plone \
+&& chown imio:imio -R /data \
+&& find /data -not -user imio -exec chown imio:imio {} \+ \
+&& find /plone -not -user imio -exec chown imio:imio {} \+ \
+&& curl -L https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_amd64.deb > /tmp/dumb-init.deb && dpkg -i /tmp/dumb-init.deb && rm /tmp/dumb-init.deb
+
+FROM base-plone AS final-builder
+
+ENV PIP=24.3.1 \
+  ZC_BUILDOUT=4.0 \
+  SETUPTOOLS=75.6.0 \
+  WHEEL=0.45.1 \
+  PLONE_MAJOR=6.1 \
+  PLONE_VERSION=6.1.0
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  build-essential \
+  gcc \
+  git \
+  libbz2-dev \
+  libc6-dev \
+  libffi-dev \
+  libjpeg62-dev \
+  libopenjp2-7-dev \
+  libmemcached-dev \
+  libpcre3-dev \
+  libpq-dev \
+  libreadline-dev \
+  libssl-dev \
+  libxml2-dev \
+  libxslt1-dev \
+  python3-dev \
+  python3-pip \
+  wget \
+  zlib1g-dev \
+  && pip3 install --no-cache-dir pip==$PIP setuptools==$SETUPTOOLS zc.buildout==$ZC_BUILDOUT --break-system-packages
+
+WORKDIR /plone
+
+COPY --chown=imio buildout.cfg /plone/
+COPY --chown=imio setup.py /plone/
+COPY --chown=imio src /plone/src
+
+RUN su -c "buildout -t 30 -N" -s /bin/sh imio
+
+
+FROM base-plone AS final
+
+ARG cachebuster=0
+
+ENV PIP=24.3.1 \
+  ZC_BUILDOUT=4.0 \
+  SETUPTOOLS=75.6.0 \
+  WHEEL=0.45.1 \
+  PLONE_MAJOR=6.1 \
+  PLONE_VERSION=6.1.0
+
+VOLUME /data/blobstorage
+WORKDIR /plone
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  libjpeg62 \
+  libmemcached11 \
+  libopenjp2-7 \
+  libpq5 \
+  libtiff5-dev \
+  libxml2 \
+  libxslt1.1 \
+  lynx \
+  poppler-utils \
+  rsync \
+  wget \
+  wv \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+RUN curl -L https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_amd64.deb > /tmp/dumb-init.deb && dpkg -i /tmp/dumb-init.deb && rm /tmp/dumb-init.deb
+COPY --chown=imio --from=final-builder /plone .
+COPY --from=final-builder /usr/local/lib/python3.12/dist-packages /usr/local/lib/python3.12/dist-packages
+COPY --chown=imio skeleton/docker-entrypoint.sh /
+
+USER imio
+EXPOSE 8080
+HEALTHCHECK --interval=15s --timeout=10s --start-period=20s --retries=5 \
+  CMD wget -q http://127.0.0.1:8080/ok -O - | grep OK || exit 1
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["console"]
