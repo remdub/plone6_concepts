@@ -3,8 +3,12 @@ help:
 	@cat "Makefile" | grep '^.PHONY:' | sed -e "s/^.PHONY:/- make/"
 
 .PHONY: watch			# Watch docker image
-watch: docker-image
+watch:
 	docker compose up --watch
+
+.PHONY: attach			# Attach to docker container
+attach:
+	docker attach plone6_concepts-instance-1
 
 .PHONY: docker-image		# Build docker image
 docker-image:

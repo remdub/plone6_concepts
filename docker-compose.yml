@@ -6,13 +6,15 @@ services:
     image: plone6concepts
     develop:
       watch:
-        - action: sync+exec
+        - action: sync+restart
           path: ./src
           target: /plone/src
-          exec:
-            command: /plone/bin/instance restart
+          # exec:
+          #   command: /plone/bin/instance restart
     ports:
       - "8080:8080"
+    stdin_open: true
+    tty: true
     volumes:
       - ./var:/plone/var
     environment:

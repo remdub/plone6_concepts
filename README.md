@@ -6,3 +6,8 @@
 - Viewlets : IDocument infos viewlet
 - Adapters : IRichTitle
 
+## Docker development environment
+
+### Requirements
+
+docker compose 2.32.0
