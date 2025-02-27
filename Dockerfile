@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 AS base-py3
+FROM harbor.imio.be/docker-hub/library/ubuntu:24.04 AS base-py3
 
 ENV DEBIAN_FRONTEND=noninteractive
 
