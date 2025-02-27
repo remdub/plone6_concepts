@@ -1,7 +1,7 @@
 <metal:macro use-macro="here/main_template/macros/master">
   <metal:slot fill-slot="main">
     <h1>Infradoc</h1>
-    <table class="pat-datatables table" data-pat-datatables="paging:false;">
+    <table class="pat-datatables table" data-pat-datatables="pageLength:10;">
       <thead>
         <tr>
           <th>Nom</th>
