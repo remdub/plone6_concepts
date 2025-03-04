@@ -174,7 +174,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl -L https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_amd64.deb > /tmp/dumb-init.deb && dpkg -i /tmp/dumb-init.deb && rm /tmp/dumb-init.deb
 COPY --chown=imio --from=final-builder /plone .
 COPY --from=final-builder /usr/local/lib/python3.12/dist-packages /usr/local/lib/python3.12/dist-packages
-COPY --chown=imio skeleton/docker-entrypoint.sh /
+COPY --chown=imio docker/skeleton/docker-entrypoint.sh /
 
 USER imio
 EXPOSE 8080

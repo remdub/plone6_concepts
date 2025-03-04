@@ -30,7 +30,7 @@
   <include package=".adapters" />
   <include package=".behaviors" />
   <include package=".contents" />
-  <include package=".faceted" />
+  <!-- <include package=".faceted" /> -->
   <include package=".tables" />
   <include package=".upgrades" />
   <include package=".viewlets" />
